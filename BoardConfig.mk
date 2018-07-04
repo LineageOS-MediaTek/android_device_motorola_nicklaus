@@ -71,6 +71,7 @@ BOARD_MKBOOTIMG_ARGS := --kernel_offset $(BOARD_KERNEL_OFFSET) --ramdisk_offset 
 # Linker
 LINKER_FORCED_SHIM_LIBS := /system/vendor/bin/thermal|libshim_ifc.so
 LINKER_FORCED_SHIM_LIBS += /system/vendor/lib/libgui_ext.so|libshim_gui.so
+LINKER_FORCED_SHIM_LIBS += /system/vendor/lib/libMtkOmxVenc.so|libshim_ui.so
 
 # Partitions
 BOARD_BOOTIMAGE_PARTITION_SIZE          := 16777216
