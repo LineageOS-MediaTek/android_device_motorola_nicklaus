@@ -43,10 +43,7 @@ TARGET_USERIMAGES_USE_F2FS := true
 BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := f2fs
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
 
-# TARGET_USES_MKE2FS := true # Use MKE2FS for creating ext4 images
-
-# Fingerprint
-FINGERPRINT_SUPPORT := true
+TARGET_USES_MKE2FS := true # Use MKE2FS for creating ext4 images
 
 # Kernel
 BOARD_KERNEL_IMAGE_NAME := zImage-dtb
