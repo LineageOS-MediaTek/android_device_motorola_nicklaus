@@ -30,6 +30,11 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 PRODUCT_AAPT_CONFIG := normal xhdpi xxhdpi
 PRODUCT_AAPT_PREF_CONFIG := xxhdpi
 
+# FMRadio
+PRODUCT_PACKAGES += \
+    libfmjni \
+    FMRadio
+    
 # Lights
 PRODUCT_PACKAGES += \
     lights.mt6737m
