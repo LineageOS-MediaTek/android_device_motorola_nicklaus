@@ -208,17 +208,6 @@ service atcid-daemon-e /vendor/bin/atcid
 	disabled
 	oneshot
 
-# Lct add by zl for fpc
-service etsd /system/bin/etsd
-	user system
-	group system
-	class late_start
-
-service fingerprintd /system/bin/fingerprintd
-	class late_start
-	user system
-# Lct add end
-
 on early_property:ro.build.type=eng
 start atci_service
 start atcid-daemon-e

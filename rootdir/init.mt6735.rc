@@ -1,5 +1,3 @@
-# MTK platform .rc configure
-
 import init.connectivity.rc
 import init.project.rc
 import /FWUpgradeInit.rc
@@ -20,30 +18,18 @@ import init.modem.rc
 # *** DO NOT import the new rc file after this line ***
 
 on early-init
-    write /proc/bootprof "INIT:early-init"
-    mount debugfs debugfs /sys/kernel/debug
-    chmod 0755 /sys/kernel/debug
-
-on init
-    # Support legacy paths
-    symlink /sdcard /mnt/sdcard
-   
-    # if primary storage is physical, set ro.vold.primary_physical to 1
-    #setprop ro.vold.primary_physical 1
 
     # BATTERY proc
     chown shell system /proc/mtk_battery_cmd/current_cmd
     chown shell system /proc/mtk_battery_cmd/discharging_cmd
 
-# Temp Backward compatibility
+    # Temp Backward compatibility
     mkdir /protect_f 0771 system system
     mkdir /protect_s 0771 system system
-#Create nvdata mount point
+    #Create nvdata mount point
     mkdir /nvdata 0771 system system
-# Create CIP mount point
+    # Create CIP mount point
     mkdir /custom
-
-    mkdir /mnt/cd-rom 0000 system system
     	
 # change lk_env permission
     chown root system /proc/lk_env
@@ -54,9 +40,6 @@ on init
 # increase sysctl_rmem_max and sysctl_wmem_max values to 2M
     write /proc/sys/net/core/wmem_max 8388608
     write /proc/sys/net/core/rmem_max 8388608
-
-on late-init
-    write /proc/bootprof "INIT:late-init"
 
 # mount different fs start
 
@@ -69,27 +52,12 @@ on property:persist.mediatek.fg.log.enable=1
     write /sys/devices/platform/battery_meter/FG_daemon_log_level 7
     write /proc/sys/kernel/printk 8
 
-on charger
-    mount ext4 /dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/system /system ro wait
-    chmod 0666 /dev/kmsg
-    write /sys/devices/platform/battery_meter/FG_daemon_log_level 7
-    start fuelgauged
-    start charge_only_mode
-    start servicemanager
-
 on fs
-    write /proc/bootprof "INIT:Mount_START"
-    write /sys/kernel/debug/tracing/trace_marker "B|1|Mount"
     mount_all /fstab.mt6735
-   	
-    write /sys/kernel/debug/tracing/trace_marker "E"
-    write /proc/bootprof "INIT:Mount_END"
-    wait /dev/block/bootdevice/by-name/hw
-    start oem-hw-sh										 
 
 on post-fs
-    write /proc/bootprof "INIT:post-fs"
     # Support legacy paths
+    symlink /sdcard /mnt/sdcard 
     symlink /sdcard /storage/sdcard0
 
     #change permissions for mediaserver
@@ -132,6 +100,7 @@ on post-fs-data
 
     # Set SELinux security contexts on upgrade or policy update.
     restorecon_recursive /nvdata
+    restorecon /data/nvram
 
     chmod 0660 /data/misc/wifi/p2p_supplicant.conf
 
@@ -142,15 +111,10 @@ on post-fs-data
     mkdir /dev/radio 0770 radio radio
 
     mkdir /data/drm/wv 0770 drm system
-    # extend timeout to 10 secs for loading MD images
-    write /sys/class/firmware/timeout 10
-	
+
 # GPS
     mkdir /data/gps_mnl 0771 gps system
     mkdir /data/misc/gps 0770 gps system
-
-    # NFC
-    mkdir /data/nfc_socket 0771 nfc radio
 
 # -----------------------
 # Add by MTK
@@ -230,7 +194,6 @@ on post-fs-data
     chmod 0660 /dev/als_ps
     chmod 0660 /dev/gyroscope
     chmod 0660 /dev/aal_als
-
     chmod 0660 /sys/devices/platform/msensor/driver/cpsopmode
     chmod 0660 /sys/devices/platform/msensor/driver/cpsreptxy
     chmod 0660 /sys/devices/platform/msensor/driver/cpsreptz
@@ -255,7 +218,7 @@ on post-fs-data
     chown system system /sys/class/misc/m_acc_misc/accbatch
     chown system system /sys/class/misc/m_acc_misc/accflush
     
-chmod 0660 /sys/class/misc/m_mag_misc/magactive
+    chmod 0660 /sys/class/misc/m_mag_misc/magactive
     chmod 0660 /sys/class/misc/m_mag_misc/magdelay
     chmod 0660 /sys/class/misc/m_mag_misc/magbatch
     chmod 0660 /sys/class/misc/m_mag_misc/magflush
@@ -348,7 +311,7 @@ chmod 0660 /sys/class/misc/m_mag_misc/magactive
     chown radio system /sys/devices/platform/mt-pmic/low_battery_protect_ut
 
     mkdir /data/amit/ 0770 system system
-		mkdir /data/misc/sensor 0774 system system
+	mkdir /data/misc/sensor 0774 system system
     mkdir /data/misc/akmd 0770 system system
     mkdir /data/misc/s62x 0771 compass compass
     mkdir /data/acdapi/ 0770 system system
@@ -605,6 +568,12 @@ on boot
     chmod 0660 /sys/power/autosleep
 
     chmod 0664 /sys/class/leds/lcd-backlight/brightness
+#lenovo.sw START wangsx3 add for leds sys node
+    chmod 0666 /sys/class/leds/flash/brightness
+    chmod 0666 /sys/class/leds/torch/brightness
+    chown system system /sys/class/leds/torch/brightness
+    chown system system /sys/class/leds/flash/brightness
+#lenovo.sw END wangsx3 add for leds sys node
     chown system system /sys/devices/system/cpu/cpufreq/hotplug/cpu_num_base
     chmod 0660 /sys/devices/system/cpu/cpufreq/hotplug/cpu_num_base
     chown root   system /sys/kernel/debug/binder/transaction_log_enable
@@ -703,52 +672,6 @@ on boot
     chown system /dev/ttyGS0
     chmod 660 /dev/ttyGS1
     chown system /dev/ttyGS1
- 
-
-on property:vold.decrypt=trigger_reset_main
-    write /proc/bootprof "INIT:vold.decrypt=trigger_reset_main"
-    start stop_modem
-    setprop sys.boot_completed 0
-    setprop dev.bootcomplete 0
-    setprop service.nvram_init 0
-
-on property:vold.decrypt=trigger_post_fs_data
-    write /proc/bootprof "INIT:vold.decrypt=trigger_post_fs_data"
-
-on property:vold.decrypt=trigger_restart_min_framework
-    write /proc/bootprof "INIT:vold.decrypt=trigger_restart_min_framework"
-    start nvram_daemon
-    start sysenv_daemon
-    start start_modem
-    start msensord
-    start permission_check
-    start stp_dump
-on property:vold.decrypt=trigger_restart_framework
-    write /proc/bootprof "INIT:vold.decrypt=trigger_restart_framework"
-    start nvram_daemon
-    start sysenv_daemon
-    start start_modem
-    start msensord
-    start permission_check
-
-on property:vold.decrypt=trigger_shutdown_framework
-    write /proc/bootprof "INIT:vold.decrypt=trigger_shutdown_framework"
-    start stop_modem
-    start swapoff_action
-    stop stp_dump
-    setprop sys.boot_completed 0
-    setprop dev.bootcomplete 0
-    setprop service.nvram_init 0
-
-service stop_modem /vendor/bin/md_ctrl 0
-    class main
-    disabled
-    oneshot
-
-service start_modem /vendor/bin/md_ctrl 1
-    class main
-    disabled
-    oneshot
 
 # Define TCP buffer sizes for various networks
 #   ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
@@ -763,11 +686,6 @@ service start_modem /vendor/bin/md_ctrl 1
     setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
     setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
 
-# Update the second boot logo
-service bootlogoupdater /vendor/bin/boot_logo_updater
-    class core
-    oneshot
-
 # start ged_srv
 on property:sys.boot_completed=1
     start ged_srv
@@ -780,12 +698,6 @@ service ged_srv /vendor/bin/ged_srv
 
 service netdiag /vendor/bin/netdiag
     class main
-
-service nvram_daemon /vendor/bin/nvram_daemon
-    class main
-    user root
-    group system
-    oneshot
 
 service sysenv_daemon /vendor/bin/sysenv_daemon
     class main
@@ -832,77 +744,24 @@ service audio-daemon /vendor/bin/audiocmdservice_atci
     disabled
     oneshot
 
-service pq /vendor/bin/pq
-    class main
-    user system
-    group system graphics
-
 service aal /vendor/bin/aal
     class main
     user system
-    group system graphics
+    group system graphics radio							   
 
 service DMAgent /vendor/bin/dm_agent_binder
     class main
     user root
-    group root cache
+    group root system cache
 
 service PPLAgent /vendor/bin/ppl_agent
     class main
     user root
-    group system cache
-
-
-service cmmb /system/bin/cmmbsp
-    class main
-    user root
-    group system audio camera graphics inet net_bt net_bt_admin net_bw_acct media
-    ioprio rt 4
-
-service enableswap /system/bin/sh /enableswap.sh
-    class late_start
-    oneshot
-    seclabel u:r:enableswap:s0
-
-service swapoff_action /system/bin/sh /disableswap.sh
-    class main
-    disabled
-    oneshot
-    seclabel u:r:disableswap:s0
-
-service dbus /system/bin/dbus-daemon --system --nofork
-    class main
-    socket dbus stream 660 bluetooth bluetooth
-    user bluetooth
-    group bluetooth net_bt_admin
-
-service bluetoothd /system/bin/bluetoothd -n
-    class main
-    socket bluetooth stream 660 bluetooth bluetooth
-    socket dbus_bluetooth stream 660 bluetooth bluetooth
-    # init.rc does not yet support applying capabilities, so run as root and
-    # let bluetoothd drop uid to bluetooth with the right linux capabilities
-    group bluetooth net_bt_admin misc
-    disabled
+    group root system cache
 
 #
 #  Modem related services (Begin)
 #
-service pppd_gprs /system/bin/pppd_dt /dev/ttyACM0 debug noauth refuse-eap usepeerdns nodetach
-    user root
-    group radio cache inet misc
-    disabled
-    oneshot
-
-
-service agpsd /vendor/bin/mtk_agpsd
-    class main
-    socket agpsd stream 660 gps system
-    socket agpsd2 stream 660 gps inet
-    socket agpsd3 stream 660 gps inet
-    user gps
-    group gps radio inet sdcard_r sdcard_rw misc system
-
 service slpd /vendor/bin/slpd
     class main
     user gps
@@ -910,10 +769,6 @@ service slpd /vendor/bin/slpd
 
 
 # Sensors
-service msensord /vendor/bin/msensord
-    class main
-    oneshot
-
 service s62xd /vendor/bin/s62xd
     disabled
     user compass
@@ -1011,42 +866,11 @@ service mc64xxd /vendor/bin/mc64xxd
 #
 #sensor service (end)
 #
-#
-#emsvr service (start)
-#
-on property:ro.build.type=eng
-    start emsvr
-
-on property:ro.build.type=user
-    start emsvr_user
-
-on property:ro.build.type=userdebug
-    start emsvr_user
-
-service emsvr_user /vendor/bin/em_svr
-    disabled
-    user system
-    group system radio diag net_bt_stack
-
-service emsvr /vendor/bin/em_svr
-    disabled
-    user root
-    group net_bt_stack
-
-#
-#emsvr service (end)
-#
 
 service NvRAMAgent /vendor/bin/nvram_agent_binder
     class main
-    user system
-    group system
-
-service thermal_manager /vendor/bin/thermal_manager
-    class main
     user root
-	group system
-    oneshot
+    group system
 
 service thermal /vendor/bin/thermal
     class main
@@ -1058,24 +882,6 @@ service thermald /vendor/bin/thermald
     user system
     group system
 
-service fuelgauged /vendor/bin/fuelgauged
-    class main
-    user system
-    group system
-
-service sn /vendor/bin/sn
-    class late_start
-    user system
-    group system sdcard_rw
-    oneshot
-
-#add for power-off alarm
-service poad /vendor/bin/poad
-    class main
-    user system
-    group system
-    oneshot
-
 #monitor battery status
 service batterywarning /vendor/bin/batterywarning
     class main
@@ -1085,15 +891,15 @@ service batterywarning /vendor/bin/batterywarning
 service MtkCodecService /vendor/bin/MtkCodecService
     class main
     user system
-    group audio media sdcard_r
+    group audio camera media sdcard_r
 
 # GuiExt Server init
 service guiext-server /vendor/bin/guiext-server
-    class main
-    user system
-    group system graphics
+    class core
+    user root
+    group system graphics media
 
-service charge_only_mode /system/bin/charge_only_mode
+service charge_only_mode /vendor/bin/charge_only_mode
      user root
      group graphics system input
      disabled
@@ -1130,73 +936,5 @@ setprop persist.radio.reset_on_switch false
 setprop rild.mark_switchuser 0
 #end
 
-chmod 0644 /vendor/lib/libzteevdo-ril.so
-chomd 0644 /vendor/lib/zterilPara
-chown root /system/bin/pppd
-chmod 4755 /system/bin/pppd
-chown root /vendor/bin/chat
-chmod 4755 /vendor/bin/chat
-
-#
-#ril-daemon (begin)
-#
-service ril-3gddaemon /vendor/bin/rild_dongle
-    class main
-    socket rild-dongle stream 660 root radio
-    socket rild-dongle-debug stream 660 radio radio
-    user root
-    group radio cache inet misc audio log
-    disabled
-
-#
-#ril-daemon (end)
-#
-
-#
-#usbdongled(begin)
-#
-service usbdongled /vendor/bin/dongled
-    class main
-	user root
-	group radio cache inet misc
-	enabled
-
-
-#
-#usbdongled(end)
-#
-
-#
-# add the service for call pppd(begin)
-#
-service zpppd_gprs /vendor/bin/init.gprs-pppd
-    user root
-	group radio cache inet misc
-	disabled
-	oneshot
-#
-# add the service for call pppd(end)
-#
-
-# Program binary service
-service program_binary /vendor/bin/program_binary_service
-    class late_start
-    user system
-    group graphics
-    oneshot
-
-service vtservice /vendor/bin/vtservice
-    class main
-    socket soc_vt_tcv dgram 660 radio system
-    socket soc_vt_stk dgram 660 radio system
-    socket soc_vt_svc dgram 660 radio system
-    socket volte_vt stream 660 root system
-    user system
-    group system camera graphics inet net_admin net_raw media sdcard_rw radio sdcard_r media_rw
-    ioprio rt 4    
-    
-service mediacodec /system/bin/mediacodec
-    class main
-    user mediacodec
-    group media system audio camera inet net_bt net_bt_admin net_bw_acct drmrpc mediadrm sdcard_r media_rw sdcard_rw
-    ioprio rt 4
+    chown root /system/bin/pppd
+    chmod 4755 /system/bin/pppd
