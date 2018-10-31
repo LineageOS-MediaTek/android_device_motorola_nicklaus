@@ -57,6 +57,9 @@ BOARD_MKBOOTIMG_ARGS := --kernel_offset $(BOARD_KERNEL_OFFSET) --ramdisk_offset 
 LINKER_FORCED_SHIM_LIBS := /system/lib/libnetutils.so|libshim_ifc.so
 LINKER_FORCED_SHIM_LIBS += /system/lib/libgui.so|libshim_gui.so
 
+# Init
+TARGET_INIT_VENDOR_LIB := libinit_nicklaus
+
 # Partitions
 BOARD_BOOTIMAGE_PARTITION_SIZE          := 16777216
 BOARD_RECOVERYIMAGE_PARTITION_SIZE 	:= 16777216
